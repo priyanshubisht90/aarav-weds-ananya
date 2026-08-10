@@ -1,0 +1,6 @@
+{
+  "name": "Save the Date - Ananya & Aarav",
+  "description": "A luxury, cinematic, highly interactive wedding Save the Date experience featuring dynamic cursor photo reveals, 360° story gallery, and modern luxury aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
