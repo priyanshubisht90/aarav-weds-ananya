@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { weddingData } from '../config/weddingData';
 import { PhotoItem } from '../types';
-import { RotateCw, Play, Pause, ZoomIn, Filter, Sparkles, SlidersHorizontal, Grid, Compass } from 'lucide-react';
+import { RotateCw, Play, Pause, ZoomIn, Sparkles, SlidersHorizontal, Grid, Compass } from 'lucide-react';
 
 interface Gallery360SectionProps {
   onPhotoClick: (photo: PhotoItem) => void;
@@ -15,10 +15,13 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
   const [rotationY, setRotationY] = useState(0);
   const [rotationX, setRotationX] = useState(-5);
   
+  // Extract unique tags for filtering (excluding 'All')
+  const tags = Array.from(new Set(weddingData.gallery360Photos.map((p) => p.tag).filter(Boolean)));
+
   // Controls state
   const [isAutoRotating, setIsAutoRotating] = useState(true);
   const [rotationSpeed, setRotationSpeed] = useState(0.25);
-  const [activeTag, setActiveTag] = useState<string>('All');
+  const [activeTag, setActiveTag] = useState<string>(tags[0] || '');
   const [viewMode, setViewMode] = useState<'360' | 'grid'>('360');
 
   // Drag tracking refs
@@ -29,13 +32,10 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
   const lastYRef = useRef(0);
   const velocityYRef = useRef(0);
 
-  // Extract unique tags for filtering
-  const tags = ['All', ...Array.from(new Set(weddingData.gallery360Photos.map((p) => p.tag).filter(Boolean)))];
-
-  // Filtered photos
-  const filteredPhotos = activeTag === 'All'
-    ? weddingData.gallery360Photos
-    : weddingData.gallery360Photos.filter((p) => p.tag === activeTag);
+  // Filtered photos (falls back to all photos if activeTag yields no results)
+  const filteredPhotos = activeTag 
+    ? weddingData.gallery360Photos.filter((p) => p.tag === activeTag)
+    : weddingData.gallery360Photos;
 
   // Auto rotation loop
   useEffect(() => {
@@ -84,8 +84,7 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
   };
 
   // 3D Cylinder geometry calculations
-  const totalPhotos = filteredPhotos.length;
-  // Radius of cylinder stage
+  const totalPhotos = Math.max(1, filteredPhotos.length);
   const radius = Math.max(450, totalPhotos * 22);
 
   return (
@@ -105,7 +104,7 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
           “Every angle. Every moment. Every memory.”
         </p>
 
-        {/* Category Tag Filter & Mode Toggle */}
+        {/* Category Tag Filter */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
           {tags.slice(0, 7).map((tag) => (
             <button
@@ -186,12 +185,9 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
           >
             {filteredPhotos.map((photo, index) => {
               const photoAngle = index * (360 / totalPhotos);
-              // Calculate depth orientation
               const normalizedAngle = (photoAngle + rotationY) % 360;
               const rad = (normalizedAngle * Math.PI) / 180;
               const zVal = Math.cos(rad) * radius;
-
-              // Opacity and scale based on depth distance
               const opacity = Math.max(0.2, (zVal + radius) / (radius * 1.8));
 
               return (
@@ -213,7 +209,6 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
                 >
                   <div className="w-full h-full p-2 bg-[#2d132c]/90 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xs transition-all duration-700 ease-out hover:scale-115 hover:border-[#e8b4b8] hover:z-50">
                     <div className="w-full h-full overflow-hidden rounded-lg relative">
-                      {/* Black & White to Color transition */}
                       <img
                         src={photo.url}
                         alt={photo.caption || 'Couple moment'}
@@ -222,7 +217,6 @@ export const Gallery360Section: React.FC<Gallery360SectionProps> = ({ onPhotoCli
                         loading="lazy"
                       />
                       
-                      {/* Caption & Tag Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#150a0a]/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 text-left">
                         <span className="text-[9px] font-sans-clean text-[#e8b4b8] uppercase tracking-wider">
                           {photo.tag}
